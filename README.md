@@ -1,4 +1,18 @@
- # ReaperSOC Lab
+# The Ward
+
+> **The watchtower where The Realm detects, investigates, and responds.**
+
+The Ward is The Realm's security operations repository. It contains the ReaperSOC lab: remote administration, security monitoring, detection engineering, incident investigation, response automation, and the evidence needed to explain each exercise.
+
+Its work is deliberately isolated and safety-conscious. Testing is authorized, evidence is sanitized, and high-impact actions require safeguards and confirmation.
+
+## Evolution
+
+The Ward will evolve from security learning exercises into a repeatable defensive workflow: centralized logs, tested detections, documented investigations, reversible SOAR playbooks, and measurable lessons that feed improvements back into The Keep, The Roads, The Sky Hold, and The Forge.
+
+---
+
+## ReaperSOC Lab
 
 ReaperSOC is a personal security operations lab used to practice, document, and demonstrate the skills I am building on my journey toward earning CompTIA Security+.
 
