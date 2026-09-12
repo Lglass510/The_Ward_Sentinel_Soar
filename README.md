@@ -14,7 +14,7 @@ The Ward will evolve from security learning exercises into a repeatable defensiv
 
 ## ReaperSOC Lab
 
-ReaperSOC is a personal security operations lab used to practice, document, and demonstrate the skills I am building on my journey toward earning CompTIA Security+.
+The Ward is a personal security operations lab used to practice, document, and demonstrate the skills I am building on my journey toward earning CompTIA Security+.
 
 The lab is a hands-on environment for learning how security teams monitor systems, investigate alerts, respond to incidents, and improve their processes. Each exercise should leave behind enough notes and evidence to explain what was attempted, what happened, and what I learned.
 
