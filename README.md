@@ -52,7 +52,7 @@ The current environment includes:
 
 See [SSH/sshconfig.md](SSH/sshconfig.md) for the remote administration setup.
 
-## Suggested Learning Areas
+## Learning Areas
 
 - Networking, ports, protocols, and segmentation
 - Identity, authentication, authorization, and account management
