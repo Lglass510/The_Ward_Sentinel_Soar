@@ -130,12 +130,20 @@ Keep each exercise self-contained when possible. Use sanitized screenshots and s
 ## Progress
 
 - [x] Build the initial Rocky Linux and DC1 SSH administration path
-- [ ] Configure or select a SIEM for lab log collection
+- [x] Create the Azure resource group and dedicated The Ward security workspace for Azure security operations
+- [x] Connect Microsoft Sentinel to the Azure workspace and establish the operational baseline
+- [x] Configure Azure Activity to flow into the Microsoft Defender / Sentinel security model
 - [ ] Create and test a SIEM detection
 - [ ] Select a SOAR tool or integration
 - [ ] Build and test the first automated playbook
 - [ ] Document successful and failed playbook runs
 - [ ] Review the exercise against relevant Security+ objectives
+
+## Current Azure Security Direction
+
+The Ward is now the single operational home for Azure security work. The focus is no longer spread across disconnected exploration paths. I am consolidating the Azure security workflow into one resource group, workspace, and evidence trail for Sentinel, Defender, and Azure activity monitoring.
+
+This is the foundation for future detections, investigations, and response playbooks in the lab environment.
 
 ## What Success Looks Like
 
