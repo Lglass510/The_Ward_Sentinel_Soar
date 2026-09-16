@@ -145,6 +145,32 @@ The Ward is now the single operational home for Azure security work. The focus i
 
 This is the foundation for future detections, investigations, and response playbooks in the lab environment.
 
+## Recent Azure Milestone: The Ward Security Baseline
+
+This was not a clean, straightforward setup. The work involved a lot of misconfiguration, failed assumptions, and confusion about how Azure Activity, Microsoft Defender, and Microsoft Sentinel fit together in a single operational model. There were multiple moments where the environment felt more like a puzzle box than a security platform.
+
+The turning point came when the setup was simplified and anchored to one clear objective: create a dedicated Azure security workspace, connect Sentinel, and route Azure Activity through the same Defender/Sentinel model so the environment could support future investigation and detection work without constant drift.
+
+### What was accomplished
+
+- Created the Azure resource group dedicated to The Ward
+- Established a central workspace for Azure security operations
+- Connected Microsoft Sentinel to that workspace
+- Configured Azure Activity to feed the Microsoft Defender / Sentinel monitoring path
+- Committed to using The Ward as the single working location for Azure security work going forward
+
+### What the struggle taught me
+
+- The problem was not just the Azure portal UI; it was the lack of a clear operational model.
+- Azure Activity, Defender, and Sentinel are not interchangeable, but they do need to be intentionally aligned.
+- A clean resource-group structure and a single workspace reduce confusion dramatically.
+- It is much easier to build a sustainable process when you stop treating every setup step as an isolated troubleshooting problem.
+- The biggest win was not just getting the environment working, but creating the right foundation for ongoing detections and investigations.
+
+### Current direction
+
+Going forward, The Ward is the only place I want Azure security work to live. The goal is to keep incident visibility, telemetry, and future detections centralized in one secure workflow instead of branching out across scattered notebooks, demos, and half-finished environments.
+
 ## What Success Looks Like
 
 Success is not limited to a playbook completing without errors. A successful exercise produces a repeatable workflow, explains why each action exists, captures useful evidence, identifies limitations, and records how the process could be made safer or more effective.
