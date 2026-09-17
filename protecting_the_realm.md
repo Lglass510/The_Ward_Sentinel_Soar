@@ -1,75 +1,95 @@
 # Protecting the Realm
 
 ## Date
-2026-09-16
+2026-09-17
 
 ## Objective
-Create a clean, dedicated Azure security working area for The Ward and establish the foundation for security monitoring in Microsoft Sentinel and Microsoft Defender for Cloud using Azure Activity telemetry.
+Build the Azure security baseline for The Ward and turn it into a working telemetry-to-detection pipeline in Microsoft Sentinel.
 
 ## What I accomplished
 
-Today I created the Azure resource group for The Ward and used it as the single working space for Azure security operations. I established the connection between the Azure workspace and Microsoft Sentinel, and I configured Azure Activity so it is part of the Microsoft Defender / Sentinel monitoring model.
+Today I built the actual Azure security foundation for The Ward and moved the lab into a real operational state. I created the dedicated resource group, the Log Analytics workspace, enabled Sentinel, connected the Azure Activity solution, validated Entra ID logs, and created the first scheduled analytics rule.
 
-This is the spot I want to work out of going forward for Azure security work. The goal is to keep all relevant telemetry, configuration, and evidence in one place instead of bouncing across disconnected resources or incomplete setups.
+This was not just setup work. It was hands-on infrastructure and detection work that produced a functioning pipeline from telemetry to KQL investigation to an analytics rule.
 
 ## Why this mattered
 
-I spent a lot of time fighting misconfiguration, misunderstanding, and the wrong mental model for how Azure security telemetry is connected. The main issue was not just the platform itself but the confusion between:
+The real issue was not simply that Azure was confusing. It was that the environment was missing a clear security model. I spent time reconciling the difference between:
 
-- Azure Activity logs
-- Microsoft Defender for Cloud
-- Microsoft Sentinel workspaces
-- Log Analytics / diagnostic settings
-- resource group organization and operational scope
+- Azure Activity control-plane telemetry
+- Entra ID identity activity
+- Log Analytics workspace data
+- Microsoft Sentinel analytics and detections
+- Defender and Sentinel operating context
 
-The fix was to build a deliberate Azure security baseline instead of trying to patch together ad hoc pieces. The ward now represents a more intentional structure for Azure security monitoring, evidence retention, and future detection work.
+Once I shifted from portal clicking to an intentional telemetry flow, the environment started working like a security operations lab instead of a disconnected collection of settings.
 
-## Environment setup
+## Environment snapshot
 
-- Azure subscription with a dedicated resource group named The Ward
-- Microsoft Sentinel workspace connected to the Azure environment
-- Azure Activity configured to feed security monitoring and investigation workflows
-- Microsoft Defender integration aligned to the central operational area
+- Resource group: `rg-the-ward`
+- Log Analytics workspace: `law-the-ward`
+- Microsoft Sentinel: enabled on the workspace
+- Azure Activity telemetry: configured and validated
+- Entra ID connector: confirmed and verified
+- Data path: `AzureActivity` and `AuditLogs` into the workspace and Sentinel
 
-## Configuration approach
+## What was validated
 
-1. Create a dedicated Azure resource group for The Ward.
-2. Place the operational Azure security workspace in that resource group.
-3. Connect Microsoft Sentinel to the workspace and validate the environment is operational.
-4. Configure Azure Activity to send relevant telemetry into the monitoring path.
-5. Align the environment with Microsoft Defender so Azure security work flows through one consistent security posture.
-6. Use this setup as the central place for all future Azure security investigation and detection work.
+### Azure Activity
+
+- Installed the Azure Activity solution
+- Configured the data connector
+- Generated a control-plane activity event by modifying a tag
+- Confirmed the record landed in `AzureActivity`
+- Queried the data successfully from Defender / Advanced Hunting
+
+### Entra ID
+
+- Confirmed the connector and Audit Logs are enabled
+- Verified the `AuditLogs` table exists
+- Generated fresh identity activity and confirmed ingestion
+- Reviewed a real event and identified the key investigation fields
+
+### KQL
+
+- Ran live queries against `AuditLogs` and `AzureActivity`
+- Learned the importance of checking the actual table schema before assuming column names
+- Realized the docs and actual tenant environment do not always match one-to-one
+
+### Detection engineering
+
+- Created the first Sentinel scheduled query analytics rule
+- Got the rule configuration working after troubleshooting the editor and rule setup
+- Established the basic telemetry → detection path
 
 ## Lessons learned
 
-- The resource group is more than just storage; it is the backbone of an organized security workflow.
-- Azure Activity, Sentinel, and Defender are not interchangeable, but they need to be aligned intentionally.
-- Misunderstandings often come from treating each Azure security feature as an isolated tool instead of a connected monitoring architecture.
-- A clean workspace and naming structure reduces the confusion that comes from fragmented or accidental configuration.
-- It is better to slow down and build the right operational foundation than to keep chasing broken settings.
+- The resource group is not just a container; it is the foundation of an organized security workflow.
+- Azure Activity, Sentinel, and Entra ID telemetry all need to be intentionally aligned.
+- The habit that mattered most was inspecting the actual logs before writing assumptions into the query.
+- The first real progress happened when I stopped treating each Azure feature as separate and started viewing the lab as one detection pipeline.
+- The Ward is now a practical SOC-style environment instead of a future concept.
 
 ## Operational direction
 
-Going forward, The Ward is the only place I want to work out of for Azure security. That means:
+The Ward will continue to grow around a simple and realistic progression:
 
-- all Azure security work lives in The Ward resource group and workspace
-- Sentinel remains the central security monitoring plane
-- Azure Activity is part of the evidence and detection pipeline
-- Microsoft Defender is part of the same operating model
-- future work stays organized around one repeatable security workflow instead of scattered experiments
+1. validate telemetry
+2. investigate the data with KQL
+3. create alerts and detections
+4. confirm alert generation and incident creation
+5. build an automated response and playbook
+6. document the workflow and improve it repeatedly
 
-## Success criteria
+## Success criteria for this phase
 
-This effort is considered successful when the environment is stable, the Azure telemetry path is clear, and security work can proceed from a single baseline without constant reset or reconfiguration.
+This phase is successful when the telemetry path is stable, the workspace is actively ingesting relevant logs, the investigation workflow is working, and the first analytics rule is producing a proper alert path.
 
-## Future milestones
+## Next step
 
-- validate telemetry flow and confirm event visibility
-- build detection logic in Sentinel
-- tune investigation workflows
-- connect responses and evidence tracking
-- turn the Ward into a repeatable Azure security operations base
+The right next session is incident investigation and SOAR. That is the natural continuation after building the Azure and Sentinel baseline.
 
 ## Closing note
 
-This is not a perfect environment yet, but it is a real and useful foundation. The biggest win today was creating the right structure and removing the confusion that was slowing the work down. The Ward is now the place where the Azure security story begins.
+Today was the first time The Ward felt like a real security lab rather than an idea I was trying to preserve. The biggest win was not just creating the workspace; it was building a working telemetry-to-detection pipeline and showing that the lab can now support actual investigation and detection work.
+
