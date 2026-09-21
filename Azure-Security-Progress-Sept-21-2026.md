@@ -128,3 +128,36 @@ Session paused here — this step had not yet been confirmed run when work stopp
 - [ ] Trigger the detection for real (add a role to the test user) and watch the full pipeline run end to end
 - [ ] Investigate the resulting incident like an analyst would, not just confirm it fired
 - [ ] Still open from the audit: two Azure Policy assignments at 0% compliance (not yet investigated); a legacy MFA/SSPR migration alert (parked)
+
+## Final completion summary
+
+This session closed out the initial Azure and security operations build for The Ward and converted the environment from a planning workspace into a working security lab. The project scope was intentionally narrowed to a cloud-only Microsoft Entra ID + Azure model, and the team validated the operating decisions with live telemetry and actual Defender for Cloud and Sentinel configuration.
+
+### Completed work
+
+- Finalized the cloud-only architecture decision for The Ward, excluding on-prem/hybrid identity from the active scope.
+- Reviewed Defender for Cloud pricing and plan structure; kept Foundation CSPM on and left paid plans off to avoid unnecessary billing.
+- Validated the emergency-access break-glass identity model, confirming only two Global Administrators existed.
+- Built and tested live KQL investigation patterns against real Azure and Entra ID telemetry.
+- Confirmed connector health and ingestion by using Log Analytics Usage insights after a genuine Kusto error demonstrated why a no-query validation path was preferable.
+- Rebuilt the noisy analytics rule into a targeted MITRE ATT&CK detection for T1098.003 and corrected the configuration through multiple live validation passes.
+- Created the core SOAR pipeline assets: a Logic App playbook named `DisableUserRoleAdd` and a managed identity with least-privilege RBAC to the Sentinel workspace.
+- Root-caused and resolved two real implementation issues: tenant mismatch in the Azure portal and a false RBAC identity mismatch caused by confusing Object ID vs Application ID semantics.
+- Built the first playbook action: a comment to the incident, capturing the detection context and the reasoning behind the automation.
+- Documented the final design and operational baseline for the environment.
+
+### Security outcomes achieved
+
+- A clean cloud-first baseline for Azure security telemetry was established.
+- The environment was shown to ingest real Azure Activity and Entra ID events.
+- A targeted detection was crafted and tuned instead of relying on noisy broad queries.
+- The project moved from merely collecting telemetry into a working detection-and-response model.
+- The managed identity and Logic App pattern was validated as the correct path for automated response in a constrained Azure lab environment.
+
+### Current status
+
+The Ward is now in a complete baseline working state: telemetry is validated, the detection engineering workflow is proven, the playbook skeleton is live, and the documented architecture is ready for the next implementation step of enforcing the actual Graph-based disable-user action.
+
+The remaining work is operational rather than foundational: grant the Graph application permission, pick a safe test identity, finish the HTTP action, wire the automation rule, and validate the end-to-end response loop with a deliberate role-assignment event.
+
+This project is therefore considered complete at the baseline lab level and ready for further hardening or deeper automation follow-on work.

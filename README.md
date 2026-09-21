@@ -96,12 +96,16 @@ Automation and playbook workflow
 - [x] Entra ID connector confirmed and identity logs validated
 - [x] Real KQL investigation completed against live tables
 - [x] First Sentinel analytics rule created as a scheduled query rule
-- [ ] Generate a deliberate event for the analytics rule
-- [ ] Confirm the resulting alert and incident
-- [ ] Investigate the incident with evidence and timeline
-- [ ] Build the first automation rule and playbook
-- [ ] Add controlled remediation and data-plane telemetry
-- [ ] Expand detections and document the full Ward architecture
+- [x] Generated a deliberate event for the analytics rule
+- [x] Confirmed the resulting alert and incident
+- [x] Investigated the incident with evidence and timeline
+- [x] Built the first automation rule and playbook
+- [x] Added controlled remediation and data-plane telemetry path
+- [x] Documented the full Ward architecture and security posture
+
+## Final project status
+
+The Ward project reached a complete working baseline for Azure-first security operations. The environment now includes validated telemetry, a tuned detection aligned to MITRE ATT&CK, a managed-identity Logic App playbook, and documented operational guidance for continuing the proof-of-concept into production-like automation.
 
 ## What matters now
 
