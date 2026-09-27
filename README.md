@@ -4,121 +4,109 @@
 
 ## Executive summary
 
-The Ward is a hands-on Azure security operations project built to demonstrate how I turn cloud telemetry into detections, investigations, and response workflows in a real lab environment. It shows that I can work across Azure infrastructure, Entra ID security, Microsoft Sentinel, KQL, and automation rather than only documenting theory.
+The Ward is an Azure-first security operations lab focused on one core mission: turn cloud telemetry into actionable detections and investigations. The strongest proof point in this repo is a simulated T1098.003 privilege escalation case study in which a newly created account is assigned the Global Administrator role, the event is captured in Entra ID audit logs, and the activity is investigated through Sentinel, KQL, and incident workflow analysis.
 
-This project is focused on building a real operational pipeline: ingest telemetry, validate it, investigate suspicious activity, write detection logic, trigger incidents, and document response actions with evidence.
+This is the part of the project I want a recruiter, hiring manager, or reviewer to see immediately when they open the repo: the environment is not just configured, it is actively demonstrating detection engineering and identity defense in a realistic Azure lab.
 
-## Why this project matters
+## Featured project: T1098.003 privilege escalation investigation
 
-The Ward is designed to prove that security engineering is not just about tools; it is about building a working operating model. The repo shows a realistic progression from baseline lab creation to telemetry validation, detection engineering, identity attack simulation, and response workflow design.
+### What happened
 
-It is relevant for roles in:
+A low-privilege test account was assigned the Global Administrator role in the lab tenant. The event was then investigated end to end across:
 
-- Azure security engineering
-- Microsoft Sentinel / SIEM operations
-- Identity and access security
-- Detection engineering
-- Cloud security operations
-- SOC / IR workflow design
+- Entra ID audit logs
+- Log Analytics ingestion
+- Microsoft Sentinel detection logic
+- KQL investigation
+- alert creation and incident workflow
+- containment and response documentation
+
+### Why it matters
+
+This is one of the most important identity attack paths in Azure security. A newly created or dormant account with permanent Global Administrator access is a classic persistence and privilege escalation pattern. It shows a realistic adversary path and a credible response workflow.
+
+### Evidence included in the repo
+
+The project includes screenshots and supporting material under `Simulated Priv Esc/` showing:
+
+- Global Administrator assignment evidence
+- the test account overview
+- Sentinel analytics rule configuration
+- KQL detection results
+- raw `AuditLogs` validation
+- incident creation and closure
+- automation and playbook workflow
+- the role-removal and account-disable steps during containment
+
+This means the viewer does not have to click away to understand the project. The strongest story is already here.
+
+![Global Administrator assignment](Simulated%20Priv%20Esc/attacker_globaladmin.png)
+
+![Detection and incident evidence](Simulated%20Priv%20Esc/incident_fired.png)
+
+## What this repo demonstrates
+
+This project demonstrates that I can work across several connected disciplines:
+
+- Azure resource setup and lab design
+- Log Analytics and Microsoft Sentinel configuration
+- Entra ID audit and identity activity investigation
+- KQL analysis against real data
+- custom detection engineering
+- incident management and containment reasoning
+- automation planning and playbook design
+- technical documentation and evidence-backed storytelling
 
 ## At a glance
 
-- Status: Active and progressing from foundational setup into detection engineering and response testing
-- Core focus: Azure control-plane telemetry, Entra ID activity, KQL analysis, and incident response automation
-- Primary proof point: simulated T1098.003 privilege escalation investigation with live detection and incident workflow
-- Overall value: demonstrates end-to-end security operations capability in a lab environment
+- Status: Active, working, and evolving into a stronger Azure security operations lab
+- Core focus: Azure telemetry, identity security, KQL, detections, and response workflow
+- Primary proof point: simulated T1098.003 investigation with screenshots, detections, and incident evidence
+- Overall value: demonstrates end-to-end detection engineering capability in a realistic cloud environment
 
-## What is already built
+## Project flow
 
-### Azure security foundation
+The Ward is built around a practical operational flow:
 
-- Created the `rg-the-ward` resource group
-- Created the `law-the-ward` Log Analytics workspace
-- Enabled Microsoft Sentinel
-- Configured Azure Activity telemetry
-- Confirmed Entra ID AuditLogs ingestion
-- Validated that control-plane and identity events flow into the workspace and can be investigated
+1. Azure and Entra ID telemetry is validated
+2. logs are reviewed and investigated with KQL
+3. suspicious activity becomes detection logic
+4. incidents are created and triaged
+5. response actions and automation are considered and documented
 
-### Detection engineering
+This is the operational model the project is designed to show.
 
-- Built the first scheduled analytics rule in Microsoft Sentinel
-- Converted raw telemetry into investigations and alert logic
-- Validated a role-assignment event from live data into an incident workflow
-- Built KQL workflows that work against real tables instead of assumptions from documentation
+## Supporting project work
 
-### Identity-focused escalation case study
+The Ward also contains the broader Azure security lab groundwork, including:
 
-The strongest proof point in this repo is the simulated privilege escalation workflow built around MITRE ATT&CK T1098.003.
-
-This scenario shows a low-privilege or newly created identity being assigned the Global Administrator role, the event being captured in `AuditLogs`, the alert being generated in Sentinel, and the incident being investigated with evidence, timeline, and response actions.
-
-This is a concrete example of how identity abuse is detected and triaged in a realistic Azure environment.
-
-### Automation and response workflow
-
-- Built a Logic App response path
-- Explored incident trigger automation and entity mapping
-- Documented the technical and operational limitations of the automation layer
-- Demonstrated the difference between alerting, incident creation, and true containment automation
-
-## Featured work in this repo
-
-### 1. Azure & Sentinel lab setup
-- Azure Activity telemetry pipeline
-- Log Analytics workspace setup
-- Microsoft Sentinel enablement and validation
-
-### 2. Identity defense case study
-- T1098.003 investigation and detection workflow
-- Simulated role escalation scenario
-- Evidence package and screenshots
-
-### 3. Security operations narrative
-- Progress documentation and milestone tracking
-- Investigation workflow examples
-- Detection and automation learning notes
+- Azure Activity validation
+- Log Analytics and Microsoft Sentinel enablement
+- control-plane telemetry investigation
+- security progress notes and milestone documentation
+- concept testing around automation and response playbooks
 
 ## Repo map
 
-- `README.md` - landing page and portfolio summary
+- `README.md` - landing page and project summary
 - `Azure-Security-Progress-Sept-21-2026.md` - milestone narrative and technical progress log
-- `protecting_the_realm.md` - earlier security baseline memo and lab foundation notes
-- `feature_showcase.md` - project positioning and potential portfolio slide structure
-- `Simulated Priv Esc/` - working investigation writeup, screenshots, and evidence set
-- `screenshots/` - supporting visual artifacts
-- `SSH/` - lab tooling and access material
-
-## Project status
-
-### Completed
-
-- [x] Azure lab foundation created
-- [x] Sentinel workspace enabled
-- [x] Azure Activity and Entra ID telemetry validated
-- [x] KQL investigation workflows executed against live data
-- [x] First analytics rule created and validated
-- [x] Incident generation confirmed
-- [x] Automation workflow documented and tested in concept
-- [x] Privilege escalation investigation documented as a real case study
-
-### In progress
-
-- [ ] Expand detection library beyond the first role-assignment rule
-- [ ] Add more identity-based attack simulations
-- [ ] Improve and harden automation and containment actions
-- [ ] Turn this into a repeatable SOC-style workflow with broader coverage and reporting
+- `protecting_the_realm.md` - earlier security baseline notes
+- `feature_showcase.md` - portfolio/slide framing
+- `Simulated Priv Esc/` - the central investigation writeup and evidence set
+- `screenshots/` - supporting visual records
+- `SSH/` - lab tooling and access artifacts
 
 ## What I want to do next
 
-The Ward is moving toward a more complete Azure security operations workflow. The next objective is to build a repeatable set of investigations and detections that show not just setup, but operational maturity.
+The next steps are focused on making the lab more complete and repeatable:
 
-- Add more Entra ID and Azure control-plane attack simulations
-- Expand the detection library to cover persistence and lateral movement paths
-- Build a reusable investigation playbook for identity abuse and tenant compromise
-- Improve automation with cleaner entity mapping and more reliable response logic
-- Continue documenting progress in a way that is easy for hiring managers and technical reviewers to understand quickly
+- add more identity-based attack scenarios
+- expand the analytics rule library beyond the first role-assignment detection
+- improve containment automation and entity mapping
+- continue documenting investigations in a clean, evidence-driven format
+- turn the working lab into a more mature security operations workflow
 
-## Final summary
+## Final statement
 
-The Ward is the working record of an Azure security lab that has moved past planning and into active detection engineering. It shows real telemetry, real investigation, and real security operational thinking. The project is still evolving, but the current state is strong enough to demonstrate capability, depth, and a clear path toward more advanced Azure and identity security work.
+The Ward is no longer just a configuration exercise. It is a working Azure security operations lab with a real privilege-escalation investigation at the center of the story. If someone opens the repo and wants to understand what I can do, this is the section I want them to see first.
 
