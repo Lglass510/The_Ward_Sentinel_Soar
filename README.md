@@ -1,127 +1,144 @@
 # The Ward
 
-> Azure security lab, telemetry pipeline, and detection engineering workspace.
+> Azure security operations lab for telemetry, detection engineering, identity defense, and incident response.
 
-The Ward is now a real Microsoft Sentinel lab, not just a future plan. The focus today was building a working flow from Azure control-plane telemetry and Entra ID activity into Microsoft Sentinel, then validating the data with KQL and turning that into the first scheduled analytics rule.
+## Recruiter summary
 
-This is the point where The Ward stopped being a concept and became a hands-on security operations environment with a clear operational model.
+The Ward is a hands-on Azure security operations project built to demonstrate how I turn cloud telemetry into detections, investigations, and response workflows in a real lab environment. It shows that I can work across Azure infrastructure, Entra ID identity security, Microsoft Sentinel, KQL, and incident response automation rather than only documenting theory.
 
-## Current direction
+This project is focused on building a real operational pipeline: ingest telemetry, validate it, investigate suspicious activity, write detection logic, trigger incidents, and document response actions with evidence.
 
-The work is centered on one question: can I take Azure telemetry, investigate it, and turn it into a valid Sentinel detection workflow? The answer today was yes, at least at the baseline level.
+## At a glance
 
-The Ward is now the dedicated home for Azure security operations in this environment. The work is intentionally organized around a single path:
+- Status: Active and progressing from baseline setup to detection engineering and response testing
+- Focus: Azure control-plane telemetry, Entra ID identity activity, Microsoft Sentinel, KQL, and analytical workflow design
+- Core capability: build a complete telemetry-to-detection pipeline and validate it with real incidents
+- Current milestone: simulated privilege escalation investigation using T1098.003 and Global Administrator assignment abuse
+- Primary outcome: a working lab that demonstrates how Azure security operations work end to end
 
-1. Resource group and workspace creation
-2. Data connector onboarding
-3. Telemetry validation
-4. KQL investigation
-5. Detection engineering
-6. Incident workflow and automation
+## What I have built
 
-## What I built today
-
-### Azure security foundation
+### 1. Azure security foundation
 
 - Created the `rg-the-ward` resource group
 - Created the `law-the-ward` Log Analytics workspace
-- Enabled Microsoft Sentinel on the workspace
-- Installed the Azure Activity solution from the Content Hub
-- Configured the Azure Activity data connector and connected the subscription
-- Generated a real control-plane event by modifying a resource tag and confirmed it landed in `AzureActivity`
+- Enabled Microsoft Sentinel
+- Connected Azure Activity telemetry into the workspace
+- Verified Entra ID audit logs were ingested and usable
+- Confirmed that control-plane and identity events can be investigated with real data
 
-### Entra ID identity telemetry
+### 2. Detection engineering
 
-- Confirmed the Entra ID data connector is active for the Sentinel workspace
-- Verified the `AuditLogs` table exists in the workspace
-- Generated fresh identity activity and confirmed ingestion
-- Inspected a real event and identified the significant fields for investigation: `TimeGenerated`, `OperationName`, `Result`, `InitiatedBy`, `TargetResources`, and `AdditionalDetails`
+- Built the first scheduled analytics rule in Microsoft Sentinel
+- Validated a role-assignment event from live telemetry into an alert and incident
+- Tested the gap between raw logs and high-fidelity detections
+- Used KQL to investigate `AuditLogs` and `AzureActivity` with live evidence rather than simulated data only
 
-### KQL investigation workflow
+### 3. Identity-focused escalation case study
 
-I moved from reading about KQL to using it against real data. This included queries such as:
+The strongest proof point in this repo is the simulated T1098.003 investigation.
 
-```kusto
-AuditLogs
-| where TimeGenerated > ago(30m)
-| order by TimeGenerated desc
-```
+This project demonstrates an attacker path in which a newly created or low-privilege identity is assigned the Global Administrator role, the event is captured in Entra ID audit logs, the alert fires in Sentinel, and the incident is triaged with timeline, evidence, and incident-response documentation.
 
-```kusto
-AzureActivity
-| where TimeGenerated > ago(24h)
-| order by TimeGenerated desc
-```
+This is not a conceptual exercise. It is a functioning detection engineering workflow built in a lab environment.
 
-The biggest lesson was not to assume the schema or table names in the docs match the actual tenant environment. The habit that mattered most was inspecting the data you actually have before writing the query you wish you had.
+### 4. Automation and response workflow
 
-## Detection engineering milestone
+- Built and documented a Logic App / playbook response path for incident-triggered actions
+- Tested the incident-to-automation handoff
+- Documented both the working logic and the limitations discovered during implementation
+- Demonstrated the difference between signal generation, entity mapping, and real containment automation
 
-The biggest step forward was creating the first scheduled query analytics rule in Sentinel.
+## The most important proof points
 
-This is the moment The Ward became a SIEM lab instead of a logging lab. The working pipeline is now:
+The Ward is now more than a setup repo. It contains working artifacts that show practical security engineering progress.
 
-```text
-Azure Activity / Entra ID telemetry
-        ↓
-AzureActivity + AuditLogs
-        ↓
-law-the-ward
-        ↓
-Microsoft Sentinel
-        ↓
-KQL investigation
-        ↓
-Analytics rule
-        ↓
-Alert / incident
-        ↓
-Automation and playbook workflow
-```
+- Real Azure telemetry ingestion and validation
+- Real Entra ID audit log validation
+- KQL-based investigation against live data
+- Sentinel alert creation and incident generation
+- Role-assignment escalation simulation and detection
+- Response workflow documentation and limitations captured honestly
 
-## Lessons from the setup
+## Featured work in this repo
 
-- The issue was not just Azure portal behavior; it was missing a clean operational model.
-- Azure Activity, Defender, and Sentinel need to be intentionally aligned rather than treated as separate silos.
-- A clear resource-group and workspace structure reduces confusion immediately.
-- The initial drift was caused by assumptions about table names and log schemas, not by a lack of effort.
-- Real progress started when the environment was treated as a telemetry-to-detection pipeline rather than a set of disconnected portal tasks.
+### Azure & Sentinel lab setup
+- Azure Activity telemetry pipeline
+- Log Analytics workspace configuration
+- Microsoft Sentinel enablement and validation
 
-## Current state
+### Identity defense case study
+- T1098.003 investigation and detection workflow
+- Simulated role escalation scenario
+- Evidence package and screenshots
 
-- [x] The Ward resource group created
-- [x] Log Analytics workspace created
-- [x] Microsoft Sentinel enabled
-- [x] Azure Activity connector configured and event validated
-- [x] Entra ID connector confirmed and identity logs validated
-- [x] Real KQL investigation completed against live tables
-- [x] First Sentinel analytics rule created as a scheduled query rule
-- [x] Generated a deliberate event for the analytics rule
-- [x] Confirmed the resulting alert and incident
-- [x] Investigated the incident with evidence and timeline
-- [x] Built the first automation rule and playbook
-- [x] Added controlled remediation and data-plane telemetry path
-- [x] Documented the full Ward architecture and security posture
+### Key documentation and assets
+- `README.md` - project overview and current status
+- `Azure-Security-Progress-Sept-21-2026.md` - security progression notes
+- `Simulated Priv Esc/` - the working investigation, screenshots, and evidence set
+- `screenshots/` - supporting visual documentation
 
-## Final project status
+## Project status
 
-The Ward project reached a complete working baseline for Azure-first security operations. The environment now includes validated telemetry, a tuned detection aligned to MITRE ATT&CK, a managed-identity Logic App playbook, and documented operational guidance for continuing the proof-of-concept into production-like automation.
+### Completed
 
-## What matters now
+- [x] Azure lab foundation created
+- [x] Sentinel workspace enabled
+- [x] Azure Activity and Entra ID telemetry validated
+- [x] KQL investigation workflows executed against live data
+- [x] First analytics rule created and validated
+- [x] Incident generation confirmed
+- [x] Automation workflow documented and tested in concept
+- [x] Privilege escalation investigation documented as a real case study
 
-The Ward is no longer a place where I keep planning Azure security work. It is the working environment where the telemetry path, detection logic, and investigation process are being built and tested in real time.
+### In progress
 
-The next session can legitimately start with incident investigation and SOAR. That is the right stopping point after today's progress.
+- [ ] Expand detection library beyond the first role-assignment rule
+- [ ] Add more identity-based attack scenarios
+- [ ] Improve and harden automation and containment actions
+- [ ] Turn this into a repeatable SOC-style workflow with broader coverage and reporting
 
-## Safety and discipline
+## What I want to do next
 
-- Only test in authorized environments and accounts
-- Keep the lab isolated from production systems
-- Sanitize and protect evidence before sharing it
-- Prefer reversible actions and controlled validation
-- Document both success and failure so the process improves in a measurable way
+The Ward is moving toward a more complete Azure security operations workflow. The next objective is to build a repeatable set of investigations and detections that show not just setup, but operational maturity.
 
-## Summary
+- Add more Entra ID and Azure control-plane attack simulations
+- Expand the detection library to cover persistence and lateral movement paths
+- Build a reusable investigation playbook for identity abuse and tenant compromise
+- Improve automation with cleaner entity mapping and more reliable response logic
+- Continue documenting progress in a way that is easy for hiring managers, recruiters, and technical reviewers to understand quickly
 
-Today was the moment The Ward moved from setup and exploration into active security operations work. I created the Azure security baseline, validated telemetry, ran KQL against live data, and created the first analytics rule. That is the foundation for the next stage: alerts, investigation, and automation.
+## Why this matters
+
+This project demonstrates that I can work across several important security engineering domains:
+
+- Azure and cloud infrastructure
+- Microsoft Sentinel and SIEM operations
+- KQL investigation and detection design
+- Entra ID / identity defense
+- Incident response and automation thinking
+- Translating technical implementation into clear, evidence-backed storytelling
+
+## Career impact
+
+This work shows I can build security capability from the ground up in a cloud environment and communicate the outcome clearly. It is relevant for roles in:
+
+- Security engineering
+- Cloud security operations
+- Identity and access security
+- Detection engineering
+- SOC / detection content development
+- Azure security engineering
+
+## Repo structure
+
+- `README.md` - landing page and project narrative
+- `Azure-Security-Progress-Sept-21-2026.md` - progress narrative
+- `Simulated Priv Esc/` - privilege escalation investigation writeup and support images
+- `screenshots/` - general visual records
+- `SSH/` - lab tooling and access artifacts
+
+## Final summary
+
+The Ward is the working record of an Azure security lab that has moved past planning and into active detection engineering. It shows real telemetry, real investigation, and real security operational thinking. The project is still evolving, but the current state is strong enough to demonstrate capability, depth, and a clear path toward more advanced Azure and identity security work.
 
