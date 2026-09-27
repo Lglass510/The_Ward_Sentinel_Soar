@@ -6,9 +6,13 @@
 ## Objective
 Build the Azure security baseline for The Ward and turn it into a working telemetry-to-detection pipeline in Microsoft Sentinel.
 
+## Quick summary
+
+This was the first real milestone for The Ward: the project moved from concept to a functioning Azure security lab. I created the resource group, enabled Sentinel, connected Azure Activity, validated Entra ID activity, and set up the first detection workflow. The key result was not just the configuration itself, but the proof that the environment could support an operational flow from telemetry to detection.
+
 ## What I accomplished
 
-Today I built the actual Azure security foundation for The Ward and moved the lab into a real operational state. I created the dedicated resource group, the Log Analytics workspace, enabled Sentinel, connected the Azure Activity solution, validated Entra ID logs, and created the first scheduled analytics rule.
+I built the actual Azure security foundation for The Ward and moved the lab into a real operational state. I created the dedicated resource group, the Log Analytics workspace, enabled Sentinel, connected the Azure Activity solution, validated Entra ID logs, and created the first scheduled analytics rule.
 
 This was not just setup work. It was hands-on infrastructure and detection work that produced a functioning pipeline from telemetry to KQL investigation to an analytics rule.
 
@@ -72,7 +76,7 @@ Once I shifted from portal clicking to an intentional telemetry flow, the enviro
 
 ## Operational direction
 
-The Ward will continue to grow around a simple and realistic progression:
+The Ward continues to grow around a simple and realistic progression:
 
 1. validate telemetry
 2. investigate the data with KQL

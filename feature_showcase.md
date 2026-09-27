@@ -2,41 +2,41 @@
 
 ## Project positioning
 
-This project is designed as a polished LinkedIn feature and portfolio asset. It frames The Ward as a real Azure security operations lab that combines:
+The Ward is a portfolio-ready Azure security operations project designed to show how I build a real detection and response capability from the ground up. It combines Azure infrastructure, Entra ID investigation, Microsoft Sentinel telemetry, KQL analysis, and response automation in one working lab.
 
-- Azure security baseline setup
-- Microsoft Sentinel and Log Analytics telemetry
-- Entra ID investigation and identity telemetry
-- KQL investigation work
-- analytics rule creation
-- AI-assisted investigation and triage support
-- automation and response workflows
+This is intentionally framed as more than a lab tutorial. It is a documented example of how I move from raw cloud telemetry to usable detections and analyst workflows.
 
-The goal is to communicate that this is not a conceptual demo — it is a working, evolving security operations environment with real operational logic behind it.
+---
+
+## Why this matters
+
+Most Azure security work is fragmented across portals, logs, dashboards, and documentation. The Ward is meant to show a cleaner operating model: one environment where telemetry is validated, suspicious activity is investigated, detections are tuned, and response actions are considered.
+
+This makes the project valuable to recruiters, hiring managers, and technical reviewers because it demonstrates breadth and practical operating discipline.
 
 ---
 
 ## Recommended feature format
 
-This should be presented as a 12–14 slide carousel or project showcase. Each slide should include one strong screenshot and one short caption that explains the value of the work.
+This should be presented as a 10–12 slide carousel or project showcase. Each slide should include a single strong screenshot and a concise explanation of the operational value.
 
 ---
 
 ## Slide 1 — Title slide
 
 ### Title
-The Ward: AI-Assisted Azure Security Operations Lab
+The Ward: Azure Security Operations Lab
 
 ### Caption
-Building a real Azure security operations environment focused on telemetry, investigation, detection, and response — with AI assisting the analyst workflow.
+Building a real Azure security operations environment focused on telemetry, identity defense, detection engineering, and response workflow design.
 
 ### Screenshot
 - Clean project title slide
 - The Ward branding
-- a small architecture summary or simple diagram
+- minimal architecture diagram
 
 ### Why this works
-This immediately positions the project as modern, technical, and professional.
+This immediately communicates that the project is technical, modern, and serious.
 
 ---
 
@@ -46,14 +46,13 @@ This immediately positions the project as modern, technical, and professional.
 Why this project exists
 
 ### Caption
-Most Azure security work is fragmented across portals, logs, and dashboards. I wanted a single operating model for telemetry, investigation, and response.
+Cloud telemetry is often scattered across different tools and dashboards. The Ward creates a single operational flow for validation, investigation, and detection.
 
 ### Screenshot
-- a visual of disconnected tools or a simple “fragmented workflow” diagram
-- optional note: Azure Activity, Entra ID, Sentinel, Defender, KQL
+- Fragmented workflow diagram or simple portal-to-Sentinel flow illustration
 
 ### Why this works
-It shows intentional problem-solving, not just random lab work.
+It presents the project as a solution to a real operational problem.
 
 ---
 
@@ -63,20 +62,19 @@ It shows intentional problem-solving, not just random lab work.
 Telemetry to detection pipeline
 
 ### Caption
-The Ward is built as a direct pipeline from Azure control-plane and identity telemetry into Log Analytics and Microsoft Sentinel for investigation and detection.
+The Ward is built as a direct pipeline from Azure Activity and Entra ID telemetry into Log Analytics and Microsoft Sentinel, then into investigation and detection work.
 
 ### Screenshot
-- architecture diagram showing:
-  - Azure Activity
-  - Entra ID
-  - Log Analytics workspace
-  - Microsoft Sentinel
-  - KQL investigations
-  - Analytics rule
-  - alert / incident / automation
+- Azure Activity
+- Entra ID
+- Log Analytics
+- Microsoft Sentinel
+- KQL
+- Analytics rule
+- alert / incident
 
 ### Why this works
-This is the clearest “big picture” slide and tells recruiters everything they need to know.
+This is the clearest one-slide summary of the project and the easiest for a recruiter to understand.
 
 ---
 
@@ -86,15 +84,15 @@ This is the clearest “big picture” slide and tells recruiters everything the
 Dedicated lab environment
 
 ### Caption
-Created the dedicated Azure security lab environment for The Ward, including the resource group and Log Analytics workspace.
+Created a dedicated Azure lab environment for The Ward, including the resource group and Log Analytics workspace.
 
 ### Screenshot
-- Azure portal with resource group view
+- Resource group view
 - Log Analytics workspace overview
-- naming conventions and secure layout
+- properly named lab resources
 
 ### Why this works
-It demonstrates real infrastructure-building discipline and cloud operations experience.
+It demonstrates cloud infrastructure setup discipline and operating maturity.
 
 ---
 
@@ -104,16 +102,15 @@ It demonstrates real infrastructure-building discipline and cloud operations exp
 Microsoft Sentinel enabled
 
 ### Caption
-Enabled Microsoft Sentinel and established the security monitoring foundation for the lab.
+Enabled Sentinel and established the monitoring foundation required for a real detection workflow.
 
 ### Screenshot
 - Sentinel overview page
 - workspace connected
-- content hub or connectors screen
-- onboarding status
+- connector or content hub view
 
 ### Why this works
-This makes the project feel operational and SIEM-focused.
+It makes the project feel operational, not academic.
 
 ---
 
@@ -123,101 +120,126 @@ This makes the project feel operational and SIEM-focused.
 Validated control-plane telemetry
 
 ### Caption
-Generated a real Azure control-plane event and confirmed the telemetry landed in AzureActivity.
+Generated and confirmed a real Azure Activity event so the pipeline was proven before moving to detection work.
 
 ### Screenshot
-- Azure Activity connector configuration
-- event generation in portal
-- AzureActivity query output
-- result showing telemetry landed successfully
+- Azure Activity query output
+- event generation screenshot
+- connector validation screen
 
 ### Why this works
-It proves the telemetry pipeline is real, not hypothetical.
+It proves the foundation is real and not just configured on paper.
 
 ---
 
 ## Slide 7 — Entra ID telemetry
 
 ### Title
-Identity investigation started in the same pipeline
+Identity investigation enters the same pipeline
 
 ### Caption
-Connected Entra ID activity and verified AuditLogs ingestion so identity events became part of the same investigation model.
+Connected Entra ID audit logs and validated that identity events could be investigated alongside Azure activity in the same operational model.
 
 ### Screenshot
 - Entra ID connector status
-- AuditLogs table view
-- query output showing real activity
-- fields like OperationName, Result, InitiatedBy, TargetResources
+- AuditLogs output with fields like InitiatedBy and TargetResources
 
 ### Why this works
-This adds identity security depth and a stronger enterprise story.
+This strengthens the story by adding identity security depth and enterprise relevance.
 
 ---
 
 ## Slide 8 — KQL investigation workflow
 
 ### Title
-Real log investigation, not just theory
+Real investigation with KQL
 
 ### Caption
-I moved from reading about KQL to running live investigations against real telemetry and validating the data schema before assuming field names.
+The project moved from reading about KQL to running live investigations against real logs and checking schemas instead of assuming field names.
 
 ### Screenshot
-- KQL editor with queries such as:
-  - AzureActivity | where TimeGenerated > ago(24h)
-  - AuditLogs | where TimeGenerated > ago(30m)
-- result tables and investigation filters
+- KQL queries against `AuditLogs` and `AzureActivity`
+- output tables and investigation filters
 
 ### Why this works
-This is one of the strongest proof points for hiring managers and SOC-focused employers.
+This is one of the strongest proof points for SOC, detection, and cloud-security employers.
 
 ---
 
-## Slide 9 — AI-assisted analysis
+## Slide 9 — Detection engineering
 
 ### Title
-AI as an analyst partner
+First analytics rule created
 
 ### Caption
-AI is used to support investigation logic, summarize findings, recommend next steps, and accelerate triage without skipping evidence-based thinking.
+Built the first scheduled query analytics rule, moving the environment from a logging lab to a genuine detection workflow.
 
 ### Screenshot
-- AI summarization of suspicious event
-- recommended investigation path
-- suggested KQL query
-- analyst-facing reasoning output
-
-### Why this works
-This is the part that makes the project feel modern and differentiated.
-
----
-
-## Slide 10 — Detection engineering
-
-### Title
-The first analytics rule
-
-### Caption
-Created the first scheduled query analytics rule, turning the environment from a logging lab into a working SIEM detection workflow.
-
-### Screenshot
-- analytics rule configuration screen
+- Analytics rule configuration screen
 - KQL logic and rule settings
-- detection schedule and alert logic
+- rule criteria and schedule
 
 ### Why this works
-This is a major milestone and signals real detection engineering capability.
+It highlights a real technical milestone that feels like measurable engineering progress.
 
 ---
 
-## Slide 11 — Alert and incident lifecycle
+## Slide 10 — Simulated privilege escalation
 
 ### Title
-From telemetry to alert to incident
+T1098.003 investigation in practice
 
 ### Caption
-The pipeline now supports alert generation and incident progression, setting up the next stage: investigation, response, and automation.
+Demonstrated identity abuse through a simulated Global Administrator role assignment and validated the full detection-to-incident path.
+
+### Screenshot
+- Entra audit log or incident screenshot
+- role-assignment view
+- KQL query results
+- incident timeline
+
+### Why this works
+This is the most compelling story in the project because it shows real-world attack logic and detection capability.
+
+---
+
+## Slide 11 — Response automation
+
+### Title
+From alert to automation
+
+### Caption
+Built the first response workflow and documented both the working logic and limitations discovered during implementation.
+
+### Screenshot
+- Logic App or playbook diagram
+- automation rule config
+- incident trigger flow
+
+### Why this works
+It shows maturity beyond alert generation and into security operations workflow design.
+
+---
+
+## Slide 12 — Final takeaway
+
+### Title
+A real Azure security operations lab
+
+### Caption
+The Ward demonstrates that I can build, validate, and document a cloud security operations environment that links telemetry, detection, identity defense, and response thinking.
+
+### Screenshot
+- final architecture diagram or project status board
+
+### Why this works
+This gives the project a clean close and makes the value obvious to a recruiter or hiring manager.
+
+---
+
+## Short portfolio summary
+
+The Ward is an Azure security operations lab built to validate the full workflow from telemetry ingestion to detection engineering and incident response. It includes live Azure and Entra ID log validation, Microsoft Sentinel analytics rule creation, KQL investigation, and a simulated T1098.003 privilege escalation case study. The project demonstrates practical cloud security engineering, SIEM workflow design, and a working understanding of identity-centered attack paths.
 
 ### Screenshot
 - alert overview
