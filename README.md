@@ -88,7 +88,17 @@ The first build left the block-user playbook unfinished: it ran green but never 
 
 ![testattacker disabled by the playbook](screenshots/testattacker_diabled.png)
 
-The test also surfaced a tuning issue: the rule's 30-minute lookback overlaps its 15-minute schedule, so the one role assignment produced two incidents. Alert grouping is the next fix.
+The test also surfaced a tuning issue: the rule's 30-minute lookback overlaps its 15-minute schedule, so the one role assignment produced two incidents.
+
+**Step 10: Group duplicate alerts.** Enabled alert grouping by Account entity, so repeat alerts for the same account join one incident instead of creating new ones.
+
+**Step 11: Protect break-glass.** Created an `AutomationExclusions` watchlist through the Sentinel REST API, and added a check at the top of the playbook's loop. Protected accounts get a "human review required" comment; the disable only runs for everyone else.
+
+![Creating the watchlist](screenshots/watchlist_create_ps.png)
+
+![Playbook with the watchlist check](screenshots/playbook_watchlist_check.png)
+
+**Step 12: Test both.** Temporarily added `testuser1` to the watchlist and assigned it Security Administrator. Result: one incident with two alerts (grouping worked), one playbook run, a "protected account" comment, and `testuser1` stayed enabled. Then removed the test role and watchlist row.
 
 Full writeup with commands and verification for each step: [Playbook audit and remediation](Simulated%20Priv%20Esc/playbook-audit-and-remediation.md)
 

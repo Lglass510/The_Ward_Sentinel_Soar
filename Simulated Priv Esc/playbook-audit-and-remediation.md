@@ -26,6 +26,9 @@ The steps below are in the order I did them.
 | 7 | Delete unused API connections | Az PowerShell |
 | 8 | Remove leftover Global Admins | Microsoft Graph PowerShell |
 | 9 | Test end to end | Entra ID, Sentinel, Logic App run history |
+| 10 | Group duplicate alerts into one incident | Sentinel analytics rule |
+| 11 | Protect break-glass and admin accounts from the playbook | Sentinel watchlist (REST via PowerShell), Logic App |
+| 12 | Test the exclusion and grouping | Entra ID, Sentinel, Logic App run history |
 
 ---
 
@@ -280,7 +283,7 @@ Incidents #37 and #38 came from the same audit event. The two alerts in `Securit
 | Incident #37 | 12:55:58 - 13:25:59 |
 | Incident #38 | 13:10:58 - 13:40:59 |
 
-The rule runs every 15 minutes but looks back 30, so every event lands in two consecutive windows. The 30-minute lookback is there on purpose, to catch audit logs that arrive late, so shrinking it isn't the right fix. Alert grouping on the Account entity would merge the second alert into the first incident, and since the automation rule only triggers on incident *creation*, the playbook would run once. This is listed under Still open.
+The rule runs every 15 minutes but looks back 30, so every event lands in two consecutive windows. The 30-minute lookback is there on purpose, to catch audit logs that arrive late, so shrinking it isn't the right fix. Alert grouping on the Account entity would merge the second alert into the first incident, and since the automation rule only triggers on incident *creation*, the playbook would run once. Fixed in Step 10.
 
 Each fix showed up in this run:
 
@@ -300,20 +303,125 @@ Before the test I expected Graph to refuse the disable, since the target had jus
 
 ---
 
+## Step 10: Group duplicate alerts into one incident
+
+Three ways to stop the duplicate incidents from Step 9:
+
+| Option | Effect | Problem |
+|---|---|---|
+| Cut lookback to 15 minutes | No overlap | Late-arriving audit logs fall between windows and are missed |
+| Suppression after an alert | No second alert | A different escalation in the suppression window is missed |
+| Alert grouping by entity | Second alert joins the first incident | None; every alert is still recorded |
+
+I enabled alert grouping on the rule's **Incident settings** tab: group alerts into a single incident **if all the entities match**, within the default 5 hours. The only mapped entity is the Account object ID, so each target account gets its own incident and repeat alerts for that account merge into it.
+
+Because this workspace is onboarded to the Defender portal, Defender XDR creates the incidents and treats the rule's grouping settings as instructions ([Microsoft Learn](https://learn.microsoft.com/azure/sentinel/create-analytics-rules#configure-the-incident-creation-settings)). Grouping also stops the double playbook run: the automation rule triggers on incident *created*, and a grouped alert only *updates* an incident.
+
+**Verified:** rule config read back through the API: `groupingConfiguration.enabled: true`, `matchingMethod: AllEntities`, `lookbackDuration: PT5H`. Tested in Step 12.
+
+---
+
+## Step 11: Protect break-glass and admin accounts from the playbook
+
+Without an exclusion, a role change on `breakglass` would fire the rule and the playbook would disable the tenant's emergency access account at the worst possible moment.
+
+Where the exclusion lives matters:
+
+| Option | Result |
+|---|---|
+| Filter protected accounts out of the KQL | The detection goes blind to the most sensitive accounts |
+| Automation rule condition | Automation rules can't check a list of accounts |
+| Check inside the playbook, right before the disable | Detection and incident still happen; only the disable is skipped |
+
+Detect everything, and put the exclusion at the point where the dangerous action happens.
+
+**The watchlist.** `Az.SecurityInsights` 4.0 has no watchlist cmdlets, so I created it through the Sentinel REST API with `Invoke-AzRestMethod`:
+
+```powershell
+$csv = @"
+UserObjectId,UserPrincipalName,Reason
+00000000-0000-0000-0000-000000000001,breakglass@contoso.onmicrosoft.com,Emergency access account
+00000000-0000-0000-0000-000000000002,admin@contoso.onmicrosoft.com,Primary admin account
+"@
+
+$body = @{ properties = @{
+    displayName = "AutomationExclusions"; provider = "Custom"
+    source = "AutomationExclusions.csv"; sourceType = "Local"
+    itemsSearchKey = "UserObjectId"; contentType = "text/csv"
+    numberOfLinesToSkip = 0; rawContent = $csv
+} } | ConvertTo-Json -Depth 5
+
+Invoke-AzRestMethod -Method PUT -Payload $body `
+    -Path "$ws/providers/Microsoft.SecurityInsights/watchlists/AutomationExclusions?api-version=2024-03-01"
+```
+
+![Creating the watchlist in PowerShell](../screenshots/watchlist_create_ps.png)
+*PUT returned 200.*
+
+The search key is `UserObjectId`, the same GUID the entity mapping from Step 2 provides, so the playbook compares like with like.
+
+**The playbook check.** Two additions:
+
+1. **Get Protected Accounts**: an HTTP GET to the watchlist items API, authenticated with the managed identity (audience `https://management.azure.com/`). It runs once per playbook run, before the loop. Sentinel Responder already includes read access to watchlists, so no new permissions were needed.
+2. **Protected Account**: a condition at the top of the loop:
+   ```
+   contains(toLower(string(body('Get_Protected_Accounts'))), toLower(string(items('For_each')?['aadUserId'])))
+   ```
+   True posts a "protected account, human review required" comment. False runs the disable and the success/error comments as before.
+
+![Playbook with the watchlist check](../screenshots/playbook_watchlist_check.png)
+*Protected Account check at the top of the loop. The disable only exists in the False branch.*
+
+It fails safe: the loop only runs after **Get Protected Accounts** succeeds, so if the lookup errors, nothing gets disabled.
+
+I built the lookup, the condition, and the protected-account comment in the designer. The saved version had problems I didn't catch in the designer: three typos in the lookup URI, chunked transfer switched on for the GET, the disable sitting *after* the condition instead of inside its False branch, and the error-details comment overwritten with the protected-account text. The disable placement was the dangerous one, since the check would have run and then disabled the account anyway. Those corrections, plus moving the result Condition into the False branch, were applied as one edit through the ARM API with Claude Code, and I confirmed the structure in the designer afterward. The same edit fixed the success comment's token order.
+
+**Verified:** definition read back through the API. The watchlist URI returns both protected accounts. The managed identity's principal ID was unchanged, so its Graph permissions and Responder role carried over.
+
+---
+
+## Step 12: Test the exclusion and grouping
+
+I added `testuser1` to the watchlist as a temporary row, then assigned it Security Administrator at 16:09:06 UTC. A background poll of incidents, playbook runs, and the account's status tracked the result.
+
+| Time (UTC) | Event |
+|---|---|
+| 16:09:06 | `Add member to role`: Security Administrator to `testuser1` |
+| 16:22:38 | First alert; incident #39 (Defender XDR ID 263) created |
+| 16:23:23 | Playbook runs: Get Protected Accounts succeeds, Protected Account = True |
+| 16:23:25 | Comment on #39: "Protected account on the AutomationExclusions watchlist. Playbook did NOT disable it. Human review required: testuser1" |
+| 16:34:45 | Second alert for the same event (overlapping window) added to #39. No new incident, no second run |
+
+`Update user - disable user` and everything after it show **Skipped** in the run. AuditLogs have no `Disable account` event for `testuser1`, and the account stayed enabled.
+
+| | 13:14 test (Step 9) | 16:09 test |
+|---|---|---|
+| Incidents for one role assignment | 2 (#37, #38) | 1 (#39, 2 alerts) |
+| Playbook runs | 2 | 1 |
+| Protected account | Would have been disabled | Skipped, human review requested |
+
+**Cleanup.** Removed the Security Administrator role and the temporary watchlist row:
+
+![Test cleanup in PowerShell](../screenshots/exclusion_test_cleanup_ps.png)
+
+**Verified after cleanup:** the watchlist holds only `breakglass` and my account, `testuser1` has no role assignments, and Global Admins are still just `breakglass` and me.
+
+---
+
 ## Still open
 
-- Enable alert grouping on the analytics rule (by Account entity) so one role assignment produces one incident, not two.
 - Remove the stale Entra diagnostic settings pointing at `evidence-law` and `law-the-ward`.
 - Add `SignInLogs` to the `law-defenderlab` export.
-- The success comment rendered as `...at 2026-09-30T13:32:44.0343912Ztestattacker`: the account name token sits right after the timestamp. Move it next to "Account."
 - Add `FullName <- TargetUser` as a second Account identifier so incidents show a readable name.
 - Test against a Global Administrator target.
-- Add a Sentinel watchlist of accounts the playbook must never touch (starting with `breakglass`) and check it in the automation rule. Without it, a role change on the break-glass account would trigger an automatic disable.
-- Triage the backlog: about 35 incidents are still New, most of them from the 9/27-9/28 testing.
+- Raise severity or page someone when the target is on the exclusion watchlist, since a role change on `breakglass` is more serious than on any other account.
+- Triage the backlog: about 38 incidents are still New, most of them from testing.
 
 ## What I took from this
 
 - A green run history doesn't prove the action happened. The audit log entry `Disable account` does.
 - The portal and the saved config can disagree. Reading the rule back through the API after saving caught that the FullName identifier never saved.
 - Before granting an automation identity more power, ask who can edit that automation. They inherit everything the identity can do.
-- Tests leave residue. Three test accounts held Global Administrator for three days after the original simulation because cleanup wasn't part of the test plan.
+- Tests leave residue. Three test accounts held Global Administrator for three days after the original simulation because cleanup wasn't part of the test plan. The Step 12 test had its cleanup written in advance.
+- Exclusions belong next to the action, not in the detection. Hiding `breakglass` from the query would have removed visibility of the account that matters most.
+- At one point the designer showed the disable inside the False branch, but the saved definition had it outside the protected check. Reading the definition back after every save catches that.
