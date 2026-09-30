@@ -123,7 +123,6 @@ Full writeup with commands, timestamps, and verification for every step: [Playbo
 | [`privilege-escalation-case-study/`](privilege-escalation-case-study/) | Detection writeup, remediation writeup, KQL rule, evidence screenshots |
 | [`screenshots/`](screenshots/) | Screenshots for the remediation steps and journal |
 | [`lab-journal/`](lab-journal/) | Dated progress notes from building the lab (Sept 17 and 21) |
-| [`SSH/`](SSH/) | Notes on a separate on-prem lab's SSH setup |
 
 ## What's next
 
