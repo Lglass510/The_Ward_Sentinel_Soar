@@ -180,7 +180,7 @@ At 13:14 UTC I assigned **Security Administrator** to `testattacker`, a role on 
 |---|---|
 | 13:11:43 | Global Administrator removed from three test accounts |
 | 13:14:01 | `Add member to role`: Security Administrator to `testattacker` |
-| 13:32:13 | Incident #37 created, Account entity `aadUserId = aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa` |
+| 13:32:13 | Incident #37 created (Defender XDR ID 261), Account entity `aadUserId = aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa` |
 | 13:32:42 | Automation rule starts the playbook |
 | 13:32:43 | `PATCH /v1.0/users/aaaaaaaa-...` returns HTTP 204; AuditLogs record `Disable account` initiated by `Block-Entra-ID-user---Incident` |
 | 13:32:44 | Success comment added to incident #37 |
