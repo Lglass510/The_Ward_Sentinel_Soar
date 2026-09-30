@@ -46,9 +46,43 @@ This means the viewer does not have to click away to understand the project. The
 
 ### Follow-up: fixing the automated response
 
-The first build left the block-user playbook unfinished: it ran green but never disabled anyone. I audited the deployment, found five bugs (entity mapping, an automation rule with no conditions, a comment posted to the wrong ID, missing Graph permissions, and an over-privileged managed identity), and fixed them in the portal and PowerShell. On retest, the playbook disabled the test account 30 seconds after the incident was created, confirmed in Entra audit logs.
+The first build left the block-user playbook unfinished: it ran green but never disabled anyone. I audited the deployment, found five bugs, and fixed them in the portal and PowerShell. On retest, the playbook disabled the test account 30 seconds after the incident was created, confirmed in Entra audit logs.
 
-Full writeup: [Playbook audit and remediation](Simulated%20Priv%20Esc/playbook-audit-and-remediation.md)
+**Step 1: Audit.** The run history said Succeeded, but the playbook's identity had no Graph permissions, so it couldn't have disabled anyone.
+
+![Green run that disabled nobody](Simulated%20Priv%20Esc/logic%20app%20success.png)
+
+**Step 2: Fix the entity mapping.** The rule put a UPN into the `AadUserId` slot, which expects the object ID the playbook uses to find the user. Before and after:
+
+![Entity mapping before](screenshots/entitiy_map_mistake.png)
+
+![Entity mapping after](screenshots/entity_map_fix.png)
+
+**Step 3: Fix the success comment.** It was being posted to a tenant ID instead of the incident. Fixed in the Logic App designer.
+
+**Step 4: Scope the automation rule.** It had no conditions, so the block-user playbook would have run on every incident. Now it only runs for the privilege escalation rule.
+
+![Automation rule with no conditions](Simulated%20Priv%20Esc/automation_rule.png)
+
+**Step 5: Grant Graph permissions.** `User.EnableDisableAccount.All` and `User.Read.All` on the managed identity, through Microsoft Graph PowerShell.
+
+![Graph permissions granted](screenshots/mggraph_permissions_ps.png)
+
+**Step 6: Narrow the Sentinel role.** Replaced Sentinel Contributor and Playbook Operator on the resource group with Sentinel Responder on the workspace only.
+
+![RBAC narrowed](screenshots/narrow_permissions.png)
+
+**Step 7: Delete unused API connections.** One of them held a saved Entra sign-in token.
+
+![Unused connections removed](screenshots/remove_unused_connections_ps.png)
+
+**Step 8: Remove leftover Global Admins.** Three test accounts still held Global Administrator from the first simulation. Down from five to two.
+
+**Step 9: Test.** Assigned Security Administrator to `testattacker`. The rule fired, the playbook disabled the account, and it commented on the incident.
+
+![testattacker disabled by the playbook](screenshots/testattacker_diabled.png)
+
+Full writeup with commands and verification for each step: [Playbook audit and remediation](Simulated%20Priv%20Esc/playbook-audit-and-remediation.md)
 
 ## What this repo demonstrates
 
