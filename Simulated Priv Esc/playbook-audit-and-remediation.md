@@ -315,6 +315,9 @@ Three ways to stop the duplicate incidents from Step 9:
 
 I enabled alert grouping on the rule's **Incident settings** tab: group alerts into a single incident **if all the entities match**, within the default 5 hours. The only mapped entity is the Account object ID, so each target account gets its own incident and repeat alerts for that account merge into it.
 
+![Alert grouping settings](../screenshots/alert_grouping.png)
+*Grouping enabled, 5-hour window, match on all entities. The banner at the top is the Defender correlation caveat.*
+
 Because this workspace is onboarded to the Defender portal, Defender XDR creates the incidents and treats the rule's grouping settings as instructions ([Microsoft Learn](https://learn.microsoft.com/azure/sentinel/create-analytics-rules#configure-the-incident-creation-settings)). Grouping also stops the double playbook run: the automation rule triggers on incident *created*, and a grouped alert only *updates* an incident.
 
 **Verified:** rule config read back through the API: `groupingConfiguration.enabled: true`, `matchingMethod: AllEntities`, `lookbackDuration: PT5H`. Tested in Step 12.

@@ -92,6 +92,8 @@ The test also surfaced a tuning issue: the rule's 30-minute lookback overlaps it
 
 **Step 10: Group duplicate alerts.** Enabled alert grouping by Account entity, so repeat alerts for the same account join one incident instead of creating new ones.
 
+![Alert grouping settings](screenshots/alert_grouping.png)
+
 **Step 11: Protect break-glass.** Created an `AutomationExclusions` watchlist through the Sentinel REST API, and added a check at the top of the playbook's loop. Protected accounts get a "human review required" comment; the disable only runs for everyone else.
 
 ![Creating the watchlist](screenshots/watchlist_create_ps.png)
