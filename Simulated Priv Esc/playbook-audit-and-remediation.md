@@ -112,9 +112,7 @@ That's the account's tenant ID, not an incident, so the comment had nowhere to g
 
 This is the **Add comment to incident (V3)** action in the True branch of the canvas shown in Step 1. I also replaced the literal words "current time" in the message with the output of the `Current time` action.
 
-No screenshot was captured for this step.
-
-**Verified:** workflow definition read back after save (changed 2026-09-29 20:02 UTC).
+**Verified:** workflow definition read back after save (changed 2026-09-29 20:02 UTC). The fix in action is shown in Step 9: the Incident ARM id now resolves to a real `.../SecurityInsights/Incidents/...` path.
 
 ---
 
@@ -127,7 +125,10 @@ With no conditions, the block-user playbook would run on every incident in the w
 
 I clicked **+ Add** under Conditions and set **Analytic rule name** contains **Privilege Escalation - Entra Role Assignment**.
 
-No screenshot was captured of the saved rule. The API shows the condition is stored by rule ID, not name:
+![Automation rule after](../screenshots/automation_rule_scoped.png)
+*After: one condition limits the rule to the privilege escalation detection.*
+
+The portal shows the rule by name, but the API shows the condition is stored by rule ID:
 
 ```
 IncidentRelatedAnalyticRuleIds  Contains  .../alertRules/eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee
@@ -238,9 +239,10 @@ foreach ($upn in $testUsers) {
 }
 ```
 
-No screenshot was captured for this step.
+![Global Administrator assignments after cleanup](../screenshots/global_admins_after_cleanup.png)
+*After: only the emergency-access account and my account hold Global Administrator.*
 
-**Verified:** AuditLogs show three `Remove member from role` events at 13:11:43 UTC. Global Admins went from five to two: my account and the `breakglass` emergency-access account.
+**Verified:** AuditLogs show three `Remove member from role` events at 13:11:43 UTC. Global Admins went from five to two.
 
 ---
 
@@ -255,11 +257,30 @@ At 13:14 UTC I assigned **Security Administrator** to `testattacker`, a role on 
 | 13:32:42 | Automation rule starts the playbook |
 | 13:32:43 | `PATCH /v1.0/users/aaaaaaaa-...` returns HTTP 204; AuditLogs record `Disable account` initiated by `Block-Entra-ID-user---Incident` |
 | 13:32:44 | Success comment added to incident #37 |
+| 13:38:27 | I removed the Security Administrator assignment from `testattacker` |
+| 13:47:00 | Incident #38 (Defender XDR ID 262) created for the **same** 13:14 event |
+| 13:47:47 | Playbook runs again and comments on incident #38 |
 
 ![testattacker disabled](../screenshots/testattacker_diabled.png)
 *`testattacker` after the test: Account status Disabled. Assigned roles shows 0 because I removed the Security Administrator assignment afterwards.*
 
 Detection to containment took about 18 minutes, almost all of it the rule's 15-minute schedule plus audit log delay. From incident creation to a disabled account took 30 seconds.
+
+The run for incident #38, showing every step green and the comment posted to the incident:
+
+![Playbook run with success comment](../screenshots/playbook_run_success_comment.png)
+*Run at 13:47 UTC (9:47 local). Loop ran once for one account; the True branch posted the comment. The Incident ARM id input is a full incident path, which is the Step 3 fix working.*
+
+### Finding: one event, two incidents
+
+Incidents #37 and #38 came from the same audit event. The two alerts in `SecurityAlert` share the event time 13:14:01 but have different query windows:
+
+| Alert | Query window (UTC) |
+|---|---|
+| Incident #37 | 12:55:58 - 13:25:59 |
+| Incident #38 | 13:10:58 - 13:40:59 |
+
+The rule runs every 15 minutes but looks back 30, so every event lands in two consecutive windows. The 30-minute lookback is there on purpose, to catch audit logs that arrive late, so shrinking it isn't the right fix. Alert grouping on the Account entity would merge the second alert into the first incident, and since the automation rule only triggers on incident *creation*, the playbook would run once. This is listed under Still open.
 
 Each fix showed up in this run:
 
@@ -281,6 +302,7 @@ Before the test I expected Graph to refuse the disable, since the target had jus
 
 ## Still open
 
+- Enable alert grouping on the analytics rule (by Account entity) so one role assignment produces one incident, not two.
 - Remove the stale Entra diagnostic settings pointing at `evidence-law` and `law-the-ward`.
 - Add `SignInLogs` to the `law-defenderlab` export.
 - The success comment rendered as `...at 2026-09-30T13:32:44.0343912Ztestattacker`: the account name token sits right after the timestamp. Move it next to "Account."

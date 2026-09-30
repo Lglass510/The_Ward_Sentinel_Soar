@@ -58,11 +58,13 @@ The first build left the block-user playbook unfinished: it ran green but never 
 
 ![Entity mapping after](screenshots/entity_map_fix.png)
 
-**Step 3: Fix the success comment.** It was being posted to a tenant ID instead of the incident. Fixed in the Logic App designer.
+**Step 3: Fix the success comment.** It was being posted to a tenant ID instead of the incident. Fixed in the Logic App designer (the result shows in Step 9).
 
-**Step 4: Scope the automation rule.** It had no conditions, so the block-user playbook would have run on every incident. Now it only runs for the privilege escalation rule.
+**Step 4: Scope the automation rule.** It had no conditions, so the block-user playbook would have run on every incident. Now it only runs for the privilege escalation rule. Before and after:
 
 ![Automation rule with no conditions](Simulated%20Priv%20Esc/automation_rule.png)
+
+![Automation rule scoped to one detection](screenshots/automation_rule_scoped.png)
 
 **Step 5: Grant Graph permissions.** `User.EnableDisableAccount.All` and `User.Read.All` on the managed identity, through Microsoft Graph PowerShell.
 
@@ -78,9 +80,15 @@ The first build left the block-user playbook unfinished: it ran green but never 
 
 **Step 8: Remove leftover Global Admins.** Three test accounts still held Global Administrator from the first simulation. Down from five to two.
 
+![Global Admins after cleanup](screenshots/global_admins_after_cleanup.png)
+
 **Step 9: Test.** Assigned Security Administrator to `testattacker`. The rule fired, the playbook disabled the account, and it commented on the incident.
 
+![Playbook run with every step green](screenshots/playbook_run_success_comment.png)
+
 ![testattacker disabled by the playbook](screenshots/testattacker_diabled.png)
+
+The test also surfaced a tuning issue: the rule's 30-minute lookback overlaps its 15-minute schedule, so the one role assignment produced two incidents. Alert grouping is the next fix.
 
 Full writeup with commands and verification for each step: [Playbook audit and remediation](Simulated%20Priv%20Esc/playbook-audit-and-remediation.md)
 
