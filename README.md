@@ -44,6 +44,12 @@ This means the viewer does not have to click away to understand the project. The
 
 ![Detection and incident evidence](Simulated%20Priv%20Esc/incident_fired.png)
 
+### Follow-up: fixing the automated response
+
+The first build left the block-user playbook unfinished: it ran green but never disabled anyone. I audited the deployment, found five bugs (entity mapping, an automation rule with no conditions, a comment posted to the wrong ID, missing Graph permissions, and an over-privileged managed identity), and fixed them in the portal and PowerShell. On retest, the playbook disabled the test account 30 seconds after the incident was created, confirmed in Entra audit logs.
+
+Full writeup: [Playbook audit and remediation](Simulated%20Priv%20Esc/playbook-audit-and-remediation.md)
+
 ## What this repo demonstrates
 
 This project demonstrates that I can work across several connected disciplines:
@@ -102,7 +108,7 @@ The next steps are focused on making the lab more complete and repeatable:
 
 - add more identity-based attack scenarios
 - expand the analytics rule library beyond the first role-assignment detection
-- improve containment automation and entity mapping
+- add a watchlist exclusion so automation never touches the break-glass account
 - continue documenting investigations in a clean, evidence-driven format
 - turn the working lab into a more mature security operations workflow
 
