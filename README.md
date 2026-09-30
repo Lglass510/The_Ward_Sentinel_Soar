@@ -1,76 +1,78 @@
-# The Ward
+# The Ward: Azure Sentinel Detection and Automated Response
 
-> Azure security operations lab for telemetry, detection engineering, identity defense, and incident response.
+Detects privilege escalation in Microsoft Entra ID (MITRE ATT&CK [T1098.003](https://attack.mitre.org/techniques/T1098/003/)) with Microsoft Sentinel and automatically disables the targeted account, while keeping break-glass and admin accounts out of reach of the automation.
 
-## Executive summary
+**The short version:** the first build of the response playbook reported *Succeeded* on every run and never disabled anyone. I audited the deployment, found five configuration bugs, fixed them, added duplicate-alert grouping and a break-glass exclusion, and proved each change with audit logs.
 
-The Ward is an Azure-first security operations lab focused on one core mission: turn cloud telemetry into actionable detections and investigations. The strongest proof point in this repo is a simulated T1098.003 privilege escalation case study in which a newly created account is assigned the Global Administrator role, the event is captured in Entra ID audit logs, and the activity is investigated through Sentinel, KQL, and incident workflow analysis.
+| Result | Evidence |
+|---|---|
+| Incident to disabled account: **~30 seconds** | Entra audit log `Disable account`, initiated by the playbook |
+| Role assignment to incident: **~18 minutes** | 15-minute rule schedule plus audit log delay |
+| Duplicate incidents per event: **2 → 1** | Alert grouping by Account entity |
+| Protected accounts: **skipped, human review requested** | Tested with a temporary watchlist entry |
+| Playbook permissions: **least privilege** | Graph `User.EnableDisableAccount.All` + `User.Read.All`; Sentinel Responder on the workspace only |
 
-This is the part of the project I want a recruiter, hiring manager, or reviewer to see immediately when they open the repo: the environment is not just configured, it is actively demonstrating detection engineering and identity defense in a realistic Azure lab.
+## Architecture
 
-## Featured project: T1098.003 privilege escalation investigation
+```mermaid
+flowchart TD
+    A["Entra ID<br/>role assigned to a user"] -->|"diagnostic setting"| B["Log Analytics workspace<br/>AuditLogs table"]
+    B --> C["Sentinel analytics rule<br/>runs every 15 min, 30 min lookback<br/>Account entity = Entra object ID"]
+    C -->|"alerts grouped per account"| D["Incident<br/>created by Defender XDR"]
+    D --> E["Automation rule<br/>fires only for this analytics rule"]
+    E --> F["Logic App playbook<br/>system-assigned managed identity"]
+    F --> G["Get Account entities<br/>from the incident"]
+    G --> H["Read AutomationExclusions<br/>watchlist"]
+    H --> I{"Account on<br/>watchlist?"}
+    I -->|"yes"| J["Comment on incident:<br/>protected, human review required"]
+    I -->|"no"| K["Microsoft Graph<br/>PATCH accountEnabled = false"]
+    K --> L{"Disable<br/>succeeded?"}
+    L -->|"yes"| M["Comment: account disabled,<br/>with timestamp"]
+    L -->|"no"| N["Comment: Graph error message,<br/>manual review"]
+```
 
-### What happened
+| Component | Resource | Access it holds |
+|---|---|---|
+| Workspace | `law-defenderlab` (North Central US) | Receives Entra `AuditLogs` via diagnostic setting |
+| Detection | [T1098.003 KQL rule](privilege-escalation-case-study/T1098.003_privilege_escalation_detection.kql) | Watches five high-impact admin roles |
+| Playbook identity | System-assigned managed identity | Graph: enable/disable users, read users. Azure: Sentinel Responder on the workspace |
+| Exclusions | `AutomationExclusions` watchlist | Break-glass account and primary admin account |
 
-A low-privilege test account was assigned the Global Administrator role in the lab tenant. The event was then investigated end to end across:
+## Part 1: Detection
 
-- Entra ID audit logs
-- Log Analytics ingestion
-- Microsoft Sentinel detection logic
-- KQL investigation
-- alert creation and incident workflow
-- containment and response documentation
+A throwaway account was made Global Administrator minutes after it was created. The event was traced from the Entra audit trail through Log Analytics to a custom Sentinel rule and incident.
 
-### Why it matters
+![Global Administrator assignment](privilege-escalation-case-study/attacker_globaladmin.png)
 
-This is one of the most important identity attack paths in Azure security. A newly created or dormant account with permanent Global Administrator access is a classic persistence and privilege escalation pattern. It shows a realistic adversary path and a credible response workflow.
+![Incident created by the detection](privilege-escalation-case-study/incident_fired.png)
 
-### Evidence included in the repo
+Full investigation: [T1098.003 investigation writeup](privilege-escalation-case-study/T1098.003_investigation_writeup.md)
 
-The project includes screenshots and supporting material under `Simulated Priv Esc/` showing:
-
-- Global Administrator assignment evidence
-- the test account overview
-- Sentinel analytics rule configuration
-- KQL detection results
-- raw `AuditLogs` validation
-- incident creation and closure
-- automation and playbook workflow
-- the role-removal and account-disable steps during containment
-
-This means the viewer does not have to click away to understand the project. The strongest story is already here.
-
-![Global Administrator assignment](Simulated%20Priv%20Esc/attacker_globaladmin.png)
-
-![Detection and incident evidence](Simulated%20Priv%20Esc/incident_fired.png)
-
-### Follow-up: fixing the automated response
-
-The first build left the block-user playbook unfinished: it ran green but never disabled anyone. I audited the deployment, found five bugs, and fixed them in the portal and PowerShell. On retest, the playbook disabled the test account 30 seconds after the incident was created, confirmed in Entra audit logs.
+## Part 2: Fixing the automated response
 
 **Step 1: Audit.** The run history said Succeeded, but the playbook's identity had no Graph permissions, so it couldn't have disabled anyone.
 
-![Green run that disabled nobody](Simulated%20Priv%20Esc/logic%20app%20success.png)
+![Green run that disabled nobody](privilege-escalation-case-study/logic_app_success.png)
 
 **Step 2: Fix the entity mapping.** The rule put a UPN into the `AadUserId` slot, which expects the object ID the playbook uses to find the user. Before and after:
 
-![Entity mapping before](screenshots/entitiy_map_mistake.png)
+![Entity mapping before](screenshots/entity_map_mistake.png)
 
 ![Entity mapping after](screenshots/entity_map_fix.png)
 
 **Step 3: Fix the success comment.** It was being posted to a tenant ID instead of the incident. Fixed in the Logic App designer (the result shows in Step 9).
 
-**Step 4: Scope the automation rule.** It had no conditions, so the block-user playbook would have run on every incident. Now it only runs for the privilege escalation rule. Before and after:
+**Step 4: Scope the automation rule.** With no conditions, the block-user playbook would have run on every incident. Before and after:
 
-![Automation rule with no conditions](Simulated%20Priv%20Esc/automation_rule.png)
+![Automation rule with no conditions](privilege-escalation-case-study/automation_rule.png)
 
 ![Automation rule scoped to one detection](screenshots/automation_rule_scoped.png)
 
-**Step 5: Grant Graph permissions.** `User.EnableDisableAccount.All` and `User.Read.All` on the managed identity, through Microsoft Graph PowerShell.
+**Step 5: Grant Graph permissions** to the managed identity with Microsoft Graph PowerShell. I chose not to give it an Entra admin role: anyone who can edit the Logic App inherits whatever its identity can do.
 
 ![Graph permissions granted](screenshots/mggraph_permissions_ps.png)
 
-**Step 6: Narrow the Sentinel role.** Replaced Sentinel Contributor and Playbook Operator on the resource group with Sentinel Responder on the workspace only.
+**Step 6: Narrow the Sentinel role** from Contributor and Playbook Operator on the resource group to Responder on the workspace only.
 
 ![RBAC narrowed](screenshots/narrow_permissions.png)
 
@@ -82,91 +84,49 @@ The first build left the block-user playbook unfinished: it ran green but never 
 
 ![Global Admins after cleanup](screenshots/global_admins_after_cleanup.png)
 
-**Step 9: Test.** Assigned Security Administrator to `testattacker`. The rule fired, the playbook disabled the account, and it commented on the incident.
+**Step 9: Test.** Assigned Security Administrator to a test account. The rule fired, the playbook disabled the account, and it commented on the incident.
 
 ![Playbook run with every step green](screenshots/playbook_run_success_comment.png)
 
-![testattacker disabled by the playbook](screenshots/testattacker_diabled.png)
+![Test account disabled by the playbook](screenshots/testattacker_disabled.png)
 
-The test also surfaced a tuning issue: the rule's 30-minute lookback overlaps its 15-minute schedule, so the one role assignment produced two incidents.
+The test also exposed a tuning issue: the 30-minute lookback overlaps the 15-minute schedule, so one role assignment produced two incidents.
 
-**Step 10: Group duplicate alerts.** Enabled alert grouping by Account entity, so repeat alerts for the same account join one incident instead of creating new ones.
+**Step 10: Group duplicate alerts** by Account entity, so repeat alerts for the same account join one incident.
 
 ![Alert grouping settings](screenshots/alert_grouping.png)
 
-**Step 11: Protect break-glass.** Created an `AutomationExclusions` watchlist through the Sentinel REST API, and added a check at the top of the playbook's loop. Protected accounts get a "human review required" comment; the disable only runs for everyone else.
+**Step 11: Protect break-glass.** Created an `AutomationExclusions` watchlist through the Sentinel REST API and added a check ahead of the disable. Exclusions sit in the playbook, not the detection, so changes to the most sensitive accounts are still detected.
 
 ![Creating the watchlist](screenshots/watchlist_create_ps.png)
 
 ![Playbook with the watchlist check](screenshots/playbook_watchlist_check.png)
 
-**Step 12: Test both.** Temporarily added `testuser1` to the watchlist and assigned it Security Administrator. Result: one incident with two alerts (grouping worked), one playbook run, a "protected account" comment, and `testuser1` stayed enabled. Then removed the test role and watchlist row.
+**Step 12: Test both.** A temporarily protected test account produced one incident with two alerts, one playbook run, a "protected account" comment, and stayed enabled.
 
-Full writeup with commands and verification for each step: [Playbook audit and remediation](Simulated%20Priv%20Esc/playbook-audit-and-remediation.md)
+Full writeup with commands, timestamps, and verification for every step: [Playbook audit and remediation](privilege-escalation-case-study/playbook-audit-and-remediation.md)
 
-## What this repo demonstrates
+## Skills used
 
-This project demonstrates that I can work across several connected disciplines:
+- **Microsoft Sentinel:** scheduled analytics rules, entity mapping, alert grouping, automation rules, watchlists
+- **KQL:** detection query over `AuditLogs`, `SecurityAlert` analysis of query windows
+- **Microsoft Entra ID:** directory roles, break-glass design, audit logs
+- **Microsoft Graph:** app role assignment to a managed identity, user disable via `PATCH`
+- **Azure RBAC:** scoping roles to a single resource, add-before-remove role changes
+- **Logic Apps:** conditions, loops, managed identity HTTP actions, run history debugging
+- **PowerShell:** Az and Microsoft Graph modules, `Invoke-AzRestMethod` where no cmdlet exists
 
-- Azure resource setup and lab design
-- Log Analytics and Microsoft Sentinel configuration
-- Entra ID audit and identity activity investigation
-- KQL analysis against real data
-- custom detection engineering
-- incident management and containment reasoning
-- automation planning and playbook design
-- technical documentation and evidence-backed storytelling
+## Repository layout
 
-## At a glance
+| Path | Contents |
+|---|---|
+| [`privilege-escalation-case-study/`](privilege-escalation-case-study/) | Detection writeup, remediation writeup, KQL rule, evidence screenshots |
+| [`screenshots/`](screenshots/) | Screenshots for the remediation steps and journal |
+| [`lab-journal/`](lab-journal/) | Dated progress notes from building the lab (Sept 17 and 21) |
+| [`SSH/`](SSH/) | Notes on a separate on-prem lab's SSH setup |
 
-- Status: Active, working, and evolving into a stronger Azure security operations lab
-- Core focus: Azure telemetry, identity security, KQL, detections, and response workflow
-- Primary proof point: simulated T1098.003 investigation with screenshots, detections, and incident evidence
-- Overall value: demonstrates end-to-end detection engineering capability in a realistic cloud environment
+## What's next
 
-## Project flow
+Rebuild this environment as Bicep so it can be torn down and redeployed from code, with the Graph permission grant as a PowerShell post-deployment step.
 
-The Ward is built around a practical operational flow:
-
-1. Azure and Entra ID telemetry is validated
-2. logs are reviewed and investigated with KQL
-3. suspicious activity becomes detection logic
-4. incidents are created and triaged
-5. response actions and automation are considered and documented
-
-This is the operational model the project is designed to show.
-
-## Supporting project work
-
-The Ward also contains the broader Azure security lab groundwork, including:
-
-- Azure Activity validation
-- Log Analytics and Microsoft Sentinel enablement
-- control-plane telemetry investigation
-- security progress notes and milestone documentation
-- concept testing around automation and response playbooks
-
-## Repo map
-
-- `README.md` - landing page and project summary
-- `Azure-Security-Progress-Sept-21-2026.md` - milestone narrative and technical progress log
-- `protecting_the_realm.md` - earlier security baseline notes
-- `feature_showcase.md` - portfolio/slide framing
-- `Simulated Priv Esc/` - the central investigation writeup and evidence set
-- `screenshots/` - supporting visual records
-- `SSH/` - lab tooling and access artifacts
-
-## What I want to do next
-
-The next steps are focused on making the lab more complete and repeatable:
-
-- add more identity-based attack scenarios
-- expand the analytics rule library beyond the first role-assignment detection
-- add a watchlist exclusion so automation never touches the break-glass account
-- continue documenting investigations in a clean, evidence-driven format
-- turn the working lab into a more mature security operations workflow
-
-## Final statement
-
-The Ward is no longer just a configuration exercise. It is a working Azure security operations lab with a real privilege-escalation investigation at the center of the story. If someone opens the repo and wants to understand what I can do, this is the section I want them to see first.
-
+The initial audit and some of the troubleshooting in this project were done with Claude Code as a lab partner. The fixes were applied by me in the Azure portal and PowerShell, except where the writeup says otherwise.

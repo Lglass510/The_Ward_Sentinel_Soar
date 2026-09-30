@@ -14,7 +14,7 @@ Confirmed the scope for The Ward going forward: **cloud-only Microsoft Entra ID 
 
 Reviewed the Defender for Cloud plans page (Environment settings → subscription → Defender plans) before turning anything on, since several of these plans bill per resource per month.
 
-![Defender for Cloud plans and pricing](screenshots/cost_management.png)
+![Defender for Cloud plans and pricing](../screenshots/cost_management.png)
 
 Decision: **Foundational CSPM stays on (free)**; every paid plan stays **Off** — Defender CSPM ($5/billable resource/month), Servers Plan 2 ($15/server/month), App Service ($15/instance/month), Storage ($10/account/month + $0.15/GB malware scan), Containers ($6.8693/vCore/month), AI Services ($0.0008/1K tokens/month), Key Vault ($0.25/vault/month), Resource Manager ($5/subscription/month). No billable resources exist yet to justify turning any of these on — enabling them now would just start metered billing or a 30-day trial clock against nothing.
 
@@ -24,7 +24,7 @@ Also confirmed the earlier Defender for Cloud visibility fix is holding: Securit
 
 Built the emergency access account per Microsoft's standard guidance, adapted for the no-PIM/no-P2 tier: cloud-only account, `breakglass@contoso.onmicrosoft.com`, tagged "Emergency Access - DO NOT DELETE," standing Global Administrator assignment (no Conditional Access license available to gate it more precisely — Security Defaults doesn't support account exclusions, which is a documented limitation, not an oversight).
 
-![Global Administrator role assignments — break-glass account confirmed](screenshots/global_admins.png)
+![Global Administrator role assignments — break-glass account confirmed](../screenshots/global_admins.png)
 
 Validated: exactly 2 Global Administrators — the break-glass account and the primary account. No orphaned or unexpected admin assignments.
 
@@ -32,11 +32,11 @@ Validated: exactly 2 Global Administrators — the break-glass account and the p
 
 Walked through three queries from first principles (table name, `where`, `project`, `order by`, `getschema`):
 
-![KQL queries: sign-in activity, Azure Activity, schema inspection](screenshots/kql.png)
+![KQL queries: sign-in activity, Azure Activity, schema inspection](../screenshots/kql.png)
 
 Then tried to verify every Sentinel data connector was actually delivering fresh data, using a `union withsource=<alias> *` query across tables. Hit a genuine, unresolved Kusto error ("column named 'TableName' already exists") across multiple alias attempts and casing fixes. Rather than keep guessing against undocumented behavior, pivoted to a no-KQL alternative: **Log Analytics workspace → Insights → Usage tab**, which gives the same answer (per-table ingestion, freshness, billable status) without writing a query at all.
 
-![Log Analytics Insights — Usage tab, per-table ingestion](screenshots/log_analytics_usage.png)
+![Log Analytics Insights — Usage tab, per-table ingestion](../screenshots/log_analytics_usage.png)
 
 Confirmed live and billable/not-billable status: `AADNonInteractiveUserSignInLogs` 1.59 MB (billable), `AzureActivity` 66.01 kB (not billable), `MicrosoftGraphActivityLogs` 4.35 MB (billable), `SecurityAlert` 181.8 kB (not billable), `SecurityIncident` 510.54 kB (not billable). All connectors confirmed live.
 
@@ -61,7 +61,7 @@ Took three full passes to get every setting genuinely correct — twice the rule
 
 This baseline is reflected in today's Defender portal snapshot — 3 automation rules already present in the environment, 208 active incidents in the last 30 days, and the tuned rule's incidents now landing as intended:
 
-![Defender portal home — environment baseline, Sept 21](screenshots/defender_portal_before.png)
+![Defender portal home — environment baseline, Sept 21](../screenshots/defender_portal_before.png)
 
 ## 6. SOAR build — automation rule → playbook → automated response (in progress)
 
@@ -71,19 +71,19 @@ The bigger goal for the rest of the project: close the loop from detection to re
 
 **Real troubleshooting hit #1 — tenant mismatch (401)**: first attempt to open the deployed playbook returned "You don't have access," with the error detail naming two different Entra tenant IDs — the browser's active Azure Portal session was pointed at a different directory than the one that owns this subscription. Root-caused from the error text itself (not guessed), fixed by switching the portal's active directory to `contoso.onmicrosoft.com`.
 
-![401 error — Azure Portal session pointed at the wrong tenant](screenshots/logic_app_401_wrong_tenant.png)
+![401 error — Azure Portal session pointed at the wrong tenant](../screenshots/logic_app_401_wrong_tenant.png)
 
 **Managed identity + least-privilege RBAC**: enabled system-assigned managed identity on the Logic App (Object/principal ID `bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb`), then granted it **Microsoft Sentinel Responder** — not Contributor — scoped to just the `law-the-ward` workspace, not the subscription. Responder can read incidents and take response actions (comment, update status/owner) without the broader ability to edit analytics rules that Contributor would carry.
 
 **Real troubleshooting hit #2 — apparent ID mismatch (false alarm, verified rather than assumed)**: the IAM role assignment list showed a different-looking ID next to the identity's name than the one captured off its Identity blade. Rather than accept the assignment as correct on faith, checked the identity's own Enterprise Application overview page directly:
 
-![Confirming Object ID vs Application ID belong to the same identity](screenshots/managed_identity_objectid_vs_appid.png)
+![Confirming Object ID vs Application ID belong to the same identity](../screenshots/managed_identity_objectid_vs_appid.png)
 
 Resolved: every Entra identity carries two distinct, both-valid IDs — an **Object ID** (what Azure RBAC actually checks) and an **Application ID** (used for authentication flows). The role assignment list was displaying the Application ID as its sub-label instead of the Object ID; the underlying assignment was correct all along. Worth the five minutes to confirm rather than assume.
 
 **First playbook action built**: "Add comment to incident (V3)," wired with the Incident ARM ID pulled as dynamic content directly from the trigger (never hand-typed), and a comment documenting why the automated response fired:
 
-![Playbook's first action — commenting on the incident with detection context](screenshots/playbook_add_comment_action.png)
+![Playbook's first action — commenting on the incident with detection context](../screenshots/playbook_add_comment_action.png)
 
 > Automated response triggered by detection rule "Ward-Entra Audit Activity Test" (MITRE ATT&CK T1098.003 — Account Manipulation: Additional Cloud Roles). Investigating role assignment and taking automated remediation action.
 

@@ -13,6 +13,25 @@ The original T1098.003 writeup ended with an open item: the Sentinel playbook `B
 
 I was tempted to delete the resource group and rebuild. Instead I audited what was deployed first. The audit was run with Claude Code as a lab partner, reading configuration through Azure CLI and the Microsoft Graph and ARM REST APIs. I made the fixes myself in the portal and in PowerShell.
 
+The finished design, after all twelve steps:
+
+```mermaid
+flowchart TD
+    A["Entra ID<br/>role assigned to a user"] -->|"diagnostic setting"| B["Log Analytics workspace<br/>AuditLogs table"]
+    B --> C["Sentinel analytics rule<br/>runs every 15 min, 30 min lookback<br/>Account entity = Entra object ID"]
+    C -->|"alerts grouped per account"| D["Incident<br/>created by Defender XDR"]
+    D --> E["Automation rule<br/>fires only for this analytics rule"]
+    E --> F["Logic App playbook<br/>system-assigned managed identity"]
+    F --> G["Get Account entities<br/>from the incident"]
+    G --> H["Read AutomationExclusions<br/>watchlist"]
+    H --> I{"Account on<br/>watchlist?"}
+    I -->|"yes"| J["Comment on incident:<br/>protected, human review required"]
+    I -->|"no"| K["Microsoft Graph<br/>PATCH accountEnabled = false"]
+    K --> L{"Disable<br/>succeeded?"}
+    L -->|"yes"| M["Comment: account disabled,<br/>with timestamp"]
+    L -->|"no"| N["Comment: Graph error message,<br/>manual review"]
+```
+
 The steps below are in the order I did them.
 
 | Step | What | Where |
@@ -41,7 +60,7 @@ The playbook design itself was fine. Trigger on incident, get the Account entiti
 
 The run history was misleading. This 9/27 run shows Succeeded:
 
-![9/27 run marked Succeeded](logic%20app%20success.png)
+![9/27 run marked Succeeded](logic_app_success.png)
 *At the time of this run the managed identity had no Graph permissions, so it could not have disabled anyone.*
 
 "Succeeded" means no action ended in an unhandled failure. When `Entities - Get Accounts` returns nothing, the loop runs zero times and the run still succeeds. The latest pre-fix run (9/28) showed exactly that: every action inside the loop was `Skipped`. Two runs that did reach the disable step failed.
@@ -72,7 +91,7 @@ Ingestion over 30 days was about 0.17 GB, mostly `MicrosoftGraphActivityLogs`, s
 
 The analytics rule mapped the `TargetUser` column (a UPN like `testattacker@...onmicrosoft.com`) to the Account identifier `AadUserId`. That identifier expects the Entra object ID, a GUID.
 
-![Entity mapping before](../screenshots/entitiy_map_mistake.png)
+![Entity mapping before](../screenshots/entity_map_mistake.png)
 *Before: `AadUserId` mapped to `TargetUser`, a UPN.*
 
 The playbook builds its Graph call from that value:
@@ -264,7 +283,7 @@ At 13:14 UTC I assigned **Security Administrator** to `testattacker`, a role on 
 | 13:47:00 | Incident #38 (Defender XDR ID 262) created for the **same** 13:14 event |
 | 13:47:47 | Playbook runs again and comments on incident #38 |
 
-![testattacker disabled](../screenshots/testattacker_diabled.png)
+![testattacker disabled](../screenshots/testattacker_disabled.png)
 *`testattacker` after the test: Account status Disabled. Assigned roles shows 0 because I removed the Security Administrator assignment afterwards.*
 
 Detection to containment took about 18 minutes, almost all of it the rule's 15-minute schedule plus audit log delay. From incident creation to a disabled account took 30 seconds.
