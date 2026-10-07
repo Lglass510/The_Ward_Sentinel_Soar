@@ -22,7 +22,7 @@ Also confirmed the earlier Defender for Cloud visibility fix is holding: Securit
 
 ## 3. Identity — break-glass account validated
 
-Built the emergency access account per Microsoft's standard guidance, adapted for the no-PIM/no-P2 tier: cloud-only account, `breakglass@contoso.onmicrosoft.com`, tagged "Emergency Access - DO NOT DELETE," standing Global Administrator assignment (no Conditional Access license available to gate it more precisely — Security Defaults doesn't support account exclusions, which is a documented limitation, not an oversight).
+Built the emergency access account per Microsoft's standard guidance, adapted for the no-PIM/no-P2 tier: cloud-only account, `breakglass@<tenant>.onmicrosoft.com`, tagged "Emergency Access - DO NOT DELETE," standing Global Administrator assignment (no Conditional Access license available to gate it more precisely — Security Defaults doesn't support account exclusions, which is a documented limitation, not an oversight).
 
 ![Global Administrator role assignments — break-glass account confirmed](../screenshots/global_admins.png)
 

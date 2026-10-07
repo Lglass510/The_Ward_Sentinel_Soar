@@ -362,8 +362,8 @@ Detect everything, and put the exclusion at the point where the dangerous action
 ```powershell
 $csv = @"
 UserObjectId,UserPrincipalName,Reason
-00000000-0000-0000-0000-000000000001,breakglass@contoso.onmicrosoft.com,Emergency access account
-00000000-0000-0000-0000-000000000002,admin@contoso.onmicrosoft.com,Primary admin account
+<break-glass object ID>,breakglass@<tenant>.onmicrosoft.com,Emergency access account
+<admin object ID>,<admin UPN>,Primary admin account
 "@
 
 $body = @{ properties = @{

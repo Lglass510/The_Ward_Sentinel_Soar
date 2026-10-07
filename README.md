@@ -126,6 +126,6 @@ Full writeup with commands, timestamps, and verification for every step: [Playbo
 
 ## What's next
 
-Rebuild this environment as Bicep so it can be torn down and redeployed from code, with the Graph permission grant as a PowerShell post-deployment step.
+Done: [The Ascent](https://github.com/Lglass510/The_Ascent_Bicep_Sentinel) rebuilds this environment in Bicep so it can be torn down and redeployed from code, with the Graph permission grant and the Entra log routing as PowerShell post-deployment steps.
 
 The initial audit and some of the troubleshooting in this project were done with Claude Code as a lab partner. The fixes were applied by me in the Azure portal and PowerShell, except where the writeup says otherwise.
