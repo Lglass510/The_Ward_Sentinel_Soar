@@ -1,3 +1,5 @@
+[← Back to The Realm](https://github.com/Lglass510)
+
 # The Ward: Azure Sentinel Detection and Automated Response
 
 Detects privilege escalation in Microsoft Entra ID (MITRE ATT&CK [T1098.003](https://attack.mitre.org/techniques/T1098/003/)) with Microsoft Sentinel and automatically disables the targeted account, while keeping break-glass and admin accounts out of reach of the automation.
