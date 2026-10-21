@@ -129,6 +129,8 @@ Session paused here — this step had not yet been confirmed run when work stopp
 - [ ] Investigate the resulting incident like an analyst would, not just confirm it fired
 - [ ] Still open from the audit: two Azure Policy assignments at 0% compliance (not yet investigated); a legacy MFA/SSPR migration alert (parked)
 
+> **Follow-up (October 2026):** the first six items above were completed later and are written up in [the investigation](../privilege-escalation-case-study/T1098.003_investigation_writeup.md) and [the playbook audit and remediation](../privilege-escalation-case-study/playbook-audit-and-remediation.md): Graph permission granted, synthetic test account chosen with break-glass and admin accounts excluded, disable action and scoped automation rule built, detection triggered end to end and investigated. The Azure Policy and MFA/SSPR items have not been revisited.
+
 ## Final completion summary
 
 This session closed out the initial Azure and security operations build for The Ward and converted the environment from a planning workspace into a working security lab. The project scope was intentionally narrowed to a cloud-only Microsoft Entra ID + Azure model, and the team validated the operating decisions with live telemetry and actual Defender for Cloud and Sentinel configuration.
